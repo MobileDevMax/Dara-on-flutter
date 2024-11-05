@@ -1,0 +1,161 @@
+import 'package:flutter/material.dart';
+
+void main() => runApp(DaraGame());
+
+class DaraGame extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Dara',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: GameBoard(),
+    );
+  }
+}
+
+class GameBoard extends StatefulWidget {
+  @override
+  _GameBoardState createState() => _GameBoardState();
+}
+
+class _GameBoardState extends State<GameBoard> {
+  List<List<String>> board;
+  String currentPlayer;
+  String? winner;
+
+  _GameBoardState()
+      : board = List.generate(6, (_) => List.generate(6, (_) => '')),
+        currentPlayer = 'Red';
+
+  void resetGame() {
+    setState(() {
+      board = List.generate(6, (_) => List.generate(6, (_) => ''));
+      currentPlayer = 'Red';
+      winner = null;
+    });
+  }
+
+  void onTileTap(int row, int col) {
+    if (board[row][col] == '' && winner == null) {
+      setState(() {
+        board[row][col] = currentPlayer;
+        checkWinner();
+        currentPlayer = currentPlayer == 'Red' ? 'Blue' : 'Red';
+      });
+    }
+  }
+
+  void checkWinner() {
+    for (var i = 0; i < 6; i++) {
+      for (var j = 0; j < 4; j++) {
+        if (board[i][j] == currentPlayer &&
+            board[i][j + 1] == currentPlayer &&
+            board[i][j + 2] == currentPlayer) {
+          setState(() {
+            winner = '$currentPlayer wins!';
+          });
+          return;
+        }
+        if (board[j][i] == currentPlayer &&
+            board[j + 1][i] == currentPlayer &&
+            board[j + 2][i] == currentPlayer) {
+          setState(() {
+            winner = '$currentPlayer wins!';
+          });
+          return;
+        }
+      }
+    }
+
+    for (var i = 0; i < 4; i++) {
+      for (var j = 0; j < 4; j++) {
+        if (board[i][j] == currentPlayer &&
+            board[i + 1][j + 1] == currentPlayer &&
+            board[i + 2][j + 2] == currentPlayer) {
+          setState(() {
+            winner = '$currentPlayer wins!';
+          });
+          return;
+        }
+        if (board[i][j + 2] == currentPlayer &&
+            board[i + 1][j + 1] == currentPlayer &&
+            board[i + 2][j] == currentPlayer) {
+          setState(() {
+            winner = '$currentPlayer wins!';
+          });
+          return;
+        }
+      }
+    }
+  }
+
+  Widget buildTile(int row, int col) {
+    return GestureDetector(
+      onTap: () => onTileTap(row, col),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color.fromARGB(255, 8, 0, 0)),
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 80, 
+              height: 80,
+              color: const Color.fromARGB(255, 250, 248, 248),
+              child: Align(
+                alignment: Alignment.center,
+                child: Container(
+                  width: 80, 
+                  height: 80,
+                  color: board[row][col] == 'Red'
+                      ? Colors.red 
+                      : board[row][col] == 'Blue' 
+                          ? Colors.blue 
+                          : Colors.transparent,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Dara'),
+        actions: [
+          IconButton(icon: Icon(Icons.refresh), onPressed: resetGame),
+        ],
+      ),
+      body: Column(
+        children: [
+          if (winner != null)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                winner!,
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              ),
+            ),
+          Expanded(
+            child: GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 6,
+              ),
+              itemCount: 36,
+              itemBuilder: (context, index) {
+                int row = index ~/ 6;
+                int col = index % 6;
+                return buildTile(row, col);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
